@@ -1,11 +1,9 @@
-import HocrViewer from "@/components/hocr_viewer/hocr_viewer";
-import UploadFile from "@/components/upload";
+import ConvertFiles from "@/components/convert_files";
 
 export default function Home() {
   return (
     <main>
-      <UploadFile />
-      {/* <HocrViewer hocrContent="" /> */}
+      <ConvertFiles />
     </main>
   );
 }

@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import useHocrToHtml from "./hocr_viewer/useConverter";
+import { useHocrToHtml } from "./useConverter";
 
 interface ExtractedFile {
   relativePath: string;
@@ -20,7 +20,8 @@ interface Word {
 interface HocrViewerProps {
   hocrContent: string;
 }
-function UploadFile() {
+function ConvertFiles() {
+  const converter = useHocrToHtml();
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [files, setFiles] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>("");
@@ -34,7 +35,7 @@ function UploadFile() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        setWords(useHocrToHtml(content));
+        setWords(converter(content));
       };
       reader.readAsText(files, "UTF-8");
     }
@@ -149,13 +150,13 @@ function UploadFile() {
               className="mt-4 bg-indigo-500 px-4 py-2 text-white rounded"
               onClick={unZipFiles}
             >
-              Convert to zip
+              Extract DOCX
             </button>
             <button
               className="mt-4 bg-gray-200 px-4 py-2 rounded"
               onClick={converToHtml}
             >
-              Convert to html
+              Convert HOCR to HTML
             </button>
             <button
               className="mt-4 bg-gray-200 px-4 py-2 bg-red-500/10 text-red-500 rounded"
@@ -203,4 +204,4 @@ function UploadFile() {
   );
 }
 
-export default UploadFile;
+export default ConvertFiles;
