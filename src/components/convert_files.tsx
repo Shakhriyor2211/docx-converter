@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { useHocrToHtml } from "./useConverter";
+import { useConverter } from "./useConverter";
 
 interface ExtractedFile {
   relativePath: string;
@@ -21,21 +21,27 @@ interface HocrViewerProps {
   hocrContent: string;
 }
 function ConvertFiles() {
-  const converter = useHocrToHtml();
+  const { hocrToHtml, xmlToHtml } = useConverter();
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [files, setFiles] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>("");
   const [words, setWords] = useState<Word[]>([]);
+
   const formRef = useRef<HTMLFormElement>(null);
   const converToHtml = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    choice: number
   ) => {
     event.preventDefault();
     if (files) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        setWords(converter(content));
+        if (choice === 1) {
+          setWords(hocrToHtml(content));
+        } else {
+          xmlToHtml(content);
+        }
       };
       reader.readAsText(files, "UTF-8");
     }
@@ -129,21 +135,23 @@ function ConvertFiles() {
   }, [extractedFiles]);
 
   return (
-    <div className="flex flex-col">
-      <form ref={formRef} className="flex flex-col max-w-xl m-12 items-start">
-        <label
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          htmlFor="multiple_files"
-        >
-          Upload files
-        </label>
-        <input
-          className="block w-full text-sm p-4 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-          id="multiple_files"
-          onChange={handleChange}
-          type="file"
-          multiple
-        />
+    <div className="flex flex-col m-12">
+      <div>
+        <form ref={formRef} className="flex flex-col max-w-2xl items-start">
+          <label
+            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            htmlFor="multiple_files"
+          >
+            Upload files
+          </label>
+          <input
+            className="block w-full text-sm p-4 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+            id="multiple_files"
+            onChange={handleChange}
+            type="file"
+            multiple
+          />
+        </form>
         {files && extractedFiles.length === 0 ? (
           <div className="space-x-4">
             <button
@@ -154,7 +162,13 @@ function ConvertFiles() {
             </button>
             <button
               className="mt-4 bg-gray-200 px-4 py-2 rounded"
-              onClick={converToHtml}
+              onClick={(e) => converToHtml(e, 0)}
+            >
+              Convert XML to HTML
+            </button>
+            <button
+              className="mt-4 bg-gray-200 px-4 py-2 rounded"
+              onClick={(e) => converToHtml(e, 1)}
             >
               Convert HOCR to HTML
             </button>
@@ -174,7 +188,7 @@ function ConvertFiles() {
             Download ZIP
           </button>
         ) : null}
-      </form>
+      </div>
 
       {words.length > 0 && (
         <div className="container w-full h-full relative">
@@ -200,6 +214,8 @@ function ConvertFiles() {
           })}
         </div>
       )}
+
+      <div className="mt-12" id="document_container" />
     </div>
   );
 }
