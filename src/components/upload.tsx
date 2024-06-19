@@ -1,24 +1,51 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import useHocrToHtml from "./hocr_viewer/useConverter";
 
 interface ExtractedFile {
   relativePath: string;
   data: number[];
 }
+interface Word {
+  text: string;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
 
+interface HocrViewerProps {
+  hocrContent: string;
+}
 function UploadFile() {
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [files, setFiles] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>("");
+  const [words, setWords] = useState<Word[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+  const converToHtml = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    if (files) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setWords(useHocrToHtml(content));
+      };
+      reader.readAsText(files, "UTF-8");
+    }
+  };
 
   const unZipFiles = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
     const reader = new FileReader();
+    console.log(reader);
 
     reader.onload = async function (e) {
       const zip = await JSZip.loadAsync(e.target!.result as ArrayBuffer);
@@ -65,13 +92,20 @@ function UploadFile() {
 
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (files && files[0]) {
-        setFiles(files[0]);
+      const new_files = event.target.files;
+      if (new_files && new_files[0]) {
+        setFiles(new_files[0]);
       }
     },
     []
   );
+
+  const clearFiles = useCallback(() => {
+    setExtractedFiles([]);
+    setFiles(null);
+    setUploadStatus("");
+    if (formRef.current) (formRef.current as HTMLFormElement).reset();
+  }, [extractedFiles, files, uploadStatus, formRef]);
 
   const downloadAllFilesAsZip = useCallback(() => {
     const zip = new JSZip();
@@ -82,6 +116,7 @@ function UploadFile() {
       saveAs(content, "extracted_files.zip");
     });
   }, [extractedFiles]);
+
   const downloadAllFilesAsDocx = useCallback(() => {
     const zip = new JSZip();
     extractedFiles.forEach((file) => {
@@ -94,7 +129,7 @@ function UploadFile() {
 
   return (
     <div className="flex flex-col">
-      <form className="flex flex-col max-w-xl m-12 items-start">
+      <form ref={formRef} className="flex flex-col max-w-xl m-12 items-start">
         <label
           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
           htmlFor="multiple_files"
@@ -109,12 +144,26 @@ function UploadFile() {
           multiple
         />
         {files && extractedFiles.length === 0 ? (
-          <button
-            className="mt-4 bg-indigo-500 px-4 py-2 text-white rounded"
-            onClick={unZipFiles}
-          >
-            Convert to zip
-          </button>
+          <div className="space-x-4">
+            <button
+              className="mt-4 bg-indigo-500 px-4 py-2 text-white rounded"
+              onClick={unZipFiles}
+            >
+              Convert to zip
+            </button>
+            <button
+              className="mt-4 bg-gray-200 px-4 py-2 rounded"
+              onClick={converToHtml}
+            >
+              Convert to html
+            </button>
+            <button
+              className="mt-4 bg-gray-200 px-4 py-2 bg-red-500/10 text-red-500 rounded"
+              onClick={clearFiles}
+            >
+              Clear
+            </button>
+          </div>
         ) : null}
         {extractedFiles.length > 0 ? (
           <button
@@ -125,6 +174,31 @@ function UploadFile() {
           </button>
         ) : null}
       </form>
+
+      {words.length > 0 && (
+        <div className="container w-full h-full relative">
+          {words.map((word, index) => {
+            const { text, left, top, right, bottom } = word;
+            const width = right - left;
+            const height = bottom - top;
+
+            return (
+              <span
+                key={index}
+                className="word absolute whitespace-nowrap"
+                style={{
+                  left: `${left}px`,
+                  top: `${top}px`,
+                  width: `${width}px`,
+                  height: `${height}px`,
+                }}
+              >
+                {text}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
