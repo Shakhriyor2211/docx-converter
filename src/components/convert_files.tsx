@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useState } from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { useConverter } from "./useConverter";
+import WordEditor from "./word_editor";
 
 interface ExtractedFile {
   relativePath: string;
@@ -225,6 +226,8 @@ function ConvertFiles() {
       )}
 
       <div className="mt-12 space-y-2" id="document_container" />
+
+      <WordEditor />
     </div>
   );
 }
