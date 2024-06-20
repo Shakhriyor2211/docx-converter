@@ -19,15 +19,21 @@ export function useConverter() {
     }
     const pages = xmlDOC.querySelectorAll("page");
     for (let i = 0; i < pages.length; i++) {
+      const pageContainer = document.createElement("div");
       const pageDiv = document.createElement("div");
       const textboxes = pages[i].querySelectorAll("textbox");
+
+      pageContainer.setAttribute(
+        "class",
+        "flex justify-center items-center border shadow w-[595px] h-[842px]"
+      );
       const bbox =
         pages[i].getAttribute("bbox")?.split(",").map(parseFloat) || null;
 
       if (bbox) {
         const width = bbox[2];
         const height = bbox[3];
-        pageDiv.setAttribute("class", "border shadow");
+
         pageDiv.style.position = "relative";
         pageDiv.style.width = `${width}px`;
         pageDiv.style.height = `${height}px`;
@@ -69,13 +75,12 @@ export function useConverter() {
         pageDiv.appendChild(textboxDiv);
       }
       if (containerDiv) {
-        containerDiv.appendChild(pageDiv);
+        pageContainer.appendChild(pageDiv);
+        containerDiv.appendChild(pageContainer);
       }
     }
-    console.log(containerDiv);
-
-    return containerDiv;
   }, []);
+
   const hocrToHtml = useCallback((hocrContent: string) => {
     const parser = new DOMParser();
     const hocrDoc = parser.parseFromString(hocrContent, "text/html");
@@ -97,5 +102,50 @@ export function useConverter() {
     return wordsArray;
   }, []);
 
-  return { hocrToHtml, xmlToHtml };
+  const jsonToHtml = useCallback((jsonContent: string) => {
+    const jsContent = JSON.parse(jsonContent);
+    const containerDiv = document.getElementById("document_container");
+    if (containerDiv) {
+      containerDiv.innerHTML = "";
+    }
+    for (let i = 0; i < jsContent.length; i++) {
+      const page = jsContent[i].content;
+      const size = jsContent[i].size;
+      const pageContainer = document.createElement("div");
+      const pageDiv = document.createElement("div");
+      pageDiv.style.position = "relative";
+      pageDiv.style.width = `${size.page_width}px`;
+      pageDiv.style.height = `${size.page_height}px`;
+
+      pageContainer.setAttribute(
+        "class",
+        "flex justify-center items-center mx-auto border shadow w-[595px] h-[842px]"
+      );
+      for (let j = 0; j < page.length; j++) {
+        const chars = page[j].chars;
+        const textPar = document.createElement("p");
+
+        for (let k = 0; k < chars.length; k++) {
+          const textSpan = document.createElement("span");
+          textSpan.innerText = chars[k].text;
+
+          textSpan.style.fontSize = `${chars[k].size}px`;
+          textSpan.style.fontFamily = chars[k].fontname;
+          textSpan.style.position = "absolute";
+          textSpan.style.top = `${chars[k].top}px`;
+          textSpan.style.left = `${chars[k].x0}px`;
+
+          textPar.appendChild(textSpan);
+        }
+
+        pageDiv.appendChild(textPar);
+      }
+      if (containerDiv) {
+        pageContainer.appendChild(pageDiv);
+        containerDiv.appendChild(pageContainer);
+      }
+    }
+  }, []);
+
+  return { hocrToHtml, xmlToHtml, jsonToHtml };
 }

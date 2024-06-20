@@ -21,7 +21,7 @@ interface HocrViewerProps {
   hocrContent: string;
 }
 function ConvertFiles() {
-  const { hocrToHtml, xmlToHtml } = useConverter();
+  const { hocrToHtml, xmlToHtml, jsonToHtml } = useConverter();
   const [extractedFiles, setExtractedFiles] = useState<ExtractedFile[]>([]);
   const [files, setFiles] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>("");
@@ -37,10 +37,12 @@ function ConvertFiles() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        if (choice === 1) {
-          setWords(hocrToHtml(content));
-        } else {
+        if (choice === 0) {
+          jsonToHtml(content);
+        } else if (choice === 1) {
           xmlToHtml(content);
+        } else {
+          setWords(hocrToHtml(content));
         }
       };
       reader.readAsText(files, "UTF-8");
@@ -142,7 +144,7 @@ function ConvertFiles() {
             className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             htmlFor="multiple_files"
           >
-            Upload files
+            Upload file
           </label>
           <input
             className="block w-full text-sm p-4 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
@@ -153,7 +155,7 @@ function ConvertFiles() {
           />
         </form>
         {files && extractedFiles.length === 0 ? (
-          <div className="space-x-4">
+          <div className="max-w-2xl flex flex-wrap space-x-4">
             <button
               className="mt-4 bg-indigo-500 px-4 py-2 text-white rounded"
               onClick={unZipFiles}
@@ -164,11 +166,18 @@ function ConvertFiles() {
               className="mt-4 bg-gray-200 px-4 py-2 rounded"
               onClick={(e) => converToHtml(e, 0)}
             >
-              Convert XML to HTML
+              Convert JSON to HTML
             </button>
             <button
               className="mt-4 bg-gray-200 px-4 py-2 rounded"
               onClick={(e) => converToHtml(e, 1)}
+            >
+              Convert XML to HTML
+            </button>
+
+            <button
+              className="mt-4 bg-gray-200 px-4 py-2 rounded"
+              onClick={(e) => converToHtml(e, 2)}
             >
               Convert HOCR to HTML
             </button>
@@ -215,7 +224,7 @@ function ConvertFiles() {
         </div>
       )}
 
-      <div className="mt-12" id="document_container" />
+      <div className="mt-12 space-y-2" id="document_container" />
     </div>
   );
 }
