@@ -23,3 +23,11 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
+
+.border_tables,
+.border_tables th,
+.border_tables td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  font-family: "Arial-BoldMT";
+}

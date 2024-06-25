@@ -113,6 +113,7 @@ export function useConverter() {
       const picture = jsContent[i].picture;
       const table = jsContent[i].table;
       const size = jsContent[i].size;
+      console.log(table);
 
       const pageContainer = document.createElement("div");
       const pageDiv = document.createElement("div");
@@ -124,32 +125,47 @@ export function useConverter() {
         "class",
         "flex justify-center items-center mx-auto border shadow w-[595px] h-[842px]"
       );
-      console.log(size);
 
       for (let p = 0; p < picture.length; p++) {
         const image = document.createElement("img");
         image.setAttribute("src", `/images/${picture[p].source}`);
         image.setAttribute("alt", "picture");
-        console.log(picture[p]);
-        const [x0, y0, x1, y1] = picture[p].coords.map(Number);
-        const top = y0;
-        const left = x0;
-        const right = x1;
-        const height = y1 - y0;
 
-        console.log(x0, y0, x1, y1);
-        console.log("top:", top);
-        console.log("left:", left);
-        console.log("right:", right);
-        console.log("height:", height);
+        const [x0, y0, x1, y1] = picture[p].coords.map(Number);
+        const top = Math.round(y0);
+        const left = x0;
+        const width = x1 - x0;
+        const height = y1 - y0;
 
         image.style.position = "absolute";
         image.style.top = `${top}px`;
         image.style.left = `${left}px`;
-        image.style.right = `${right}px`;
+        image.style.width = `${width}px`;
         image.style.height = `${height}px`;
+        image.style.zIndex = "10";
 
         pageDiv.appendChild(image);
+      }
+      for (let t = 0; t < table.length; t++) {
+        const parser = new DOMParser();
+
+        const tb = parser.parseFromString(table[t].source, "text/html").body
+          .firstChild as HTMLElement;
+        const [x0, y0, x1, y1] = table[t].coords.map(Number);
+        const top = Math.round(y0);
+        const left = x0;
+        const width = x1 - x0;
+        const height = y1 - y0;
+        tb.setAttribute("class", "border_tables");
+        tb.style.position = "absolute";
+        tb.style.backgroundColor = "#fff";
+        tb.style.fontSize = `${7}px`;
+        tb.style.top = `${top + 5}px`;
+        tb.style.left = `${left}px`;
+        tb.style.width = `${width}px`;
+        tb.style.height = `${height}px`;
+        tb.style.zIndex = "10";
+        pageDiv.appendChild(tb);
       }
 
       for (let j = 0; j < page.length; j++) {
