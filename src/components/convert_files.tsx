@@ -226,8 +226,7 @@ function ConvertFiles() {
       )}
 
       <div className="mt-12 space-y-2" id="document_container" />
-
-      <WordEditor />
+      {/* <WordEditor /> */}
     </div>
   );
 }

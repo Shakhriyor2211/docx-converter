@@ -110,7 +110,10 @@ export function useConverter() {
     }
     for (let i = 0; i < jsContent.length; i++) {
       const page = jsContent[i].content;
+      const picture = jsContent[i].picture;
+      const table = jsContent[i].table;
       const size = jsContent[i].size;
+
       const pageContainer = document.createElement("div");
       const pageDiv = document.createElement("div");
       pageDiv.style.position = "relative";
@@ -121,6 +124,34 @@ export function useConverter() {
         "class",
         "flex justify-center items-center mx-auto border shadow w-[595px] h-[842px]"
       );
+      console.log(size);
+
+      for (let p = 0; p < picture.length; p++) {
+        const image = document.createElement("img");
+        image.setAttribute("src", `/images/${picture[p].source}`);
+        image.setAttribute("alt", "picture");
+        console.log(picture[p]);
+        const [x0, y0, x1, y1] = picture[p].coords.map(Number);
+        const top = y0;
+        const left = x0;
+        const right = x1;
+        const height = y1 - y0;
+
+        console.log(x0, y0, x1, y1);
+        console.log("top:", top);
+        console.log("left:", left);
+        console.log("right:", right);
+        console.log("height:", height);
+
+        image.style.position = "absolute";
+        image.style.top = `${top}px`;
+        image.style.left = `${left}px`;
+        image.style.right = `${right}px`;
+        image.style.height = `${height}px`;
+
+        pageDiv.appendChild(image);
+      }
+
       for (let j = 0; j < page.length; j++) {
         const chars = page[j].chars;
         const textPar = document.createElement("p");
